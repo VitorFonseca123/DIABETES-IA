@@ -1,7 +1,9 @@
 import time
+
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
-
+from sklearn.model_selection import KFold
 inicio = time.time()
 
 def holdout(df):
@@ -13,25 +15,36 @@ def holdout(df):
 
     return X_train, X_test, y_train, y_test
 
+def r_fold_cross_validation(df, n_splits):
+    X = df.iloc[:, 1:].values
+    y = df.iloc[:, 0].values
+
+    kfold = KFold(n_splits, shuffle=True, random_state=42)
+    for i, (train_index, test_index) in enumerate(kfold.split(X)):
+        '''print(f"Fold {i}:")
+        print(f"  Train: index={train_index}")
+        print(f"  Test:  index={test_index}")'''
+
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        return X_train, X_test, y_train, y_test
 
 #ler arquivo csv
 df = pd.read_csv('diabetes_indicator.csv')
 
-# Verificando se há linhas vazias ou com problemas
-#print("Número total de linhas no DataFrame:", len(df))
-#print("Número de valores faltantes:", df.isnull().sum().sum())
-
-# Removendo linhas com valores faltantes, se existirem
-#df = df.dropna()
-
-
-X_train, X_test, y_train, y_test = holdout(df)
+#X_train, X_test, y_train, y_test = holdout(df)
+X_train, X_test, y_train, y_test = r_fold_cross_validation(df,2)
 treinamento = pd.DataFrame(X_train)
 teste = pd.DataFrame(X_test)
-
+'''
 print(f"Número de linhas de treinamento: {len(treinamento)}")
-print(f"Número de linhas de teste: {len(teste)}")
+print(f"Número de linhas de teste: {len(teste)}")'''
 print(treinamento)
 print(teste)
+
+
+r_fold_cross_validation(df, 2)
+
+
 fim = time.time()
 print(f"{fim - inicio:.2f} s")
