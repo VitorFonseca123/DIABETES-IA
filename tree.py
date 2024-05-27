@@ -33,7 +33,7 @@ def r_fold_cross_validation(df, n_splits):
 df = pd.read_csv('diabetes_indicator.csv')
 
 #X_train, X_test, y_train, y_test = holdout(df)
-X_train, X_test, y_train, y_test = r_fold_cross_validation(df,2)
+X_train, X_test, y_train, y_test = r_fold_cross_validation(df,3)
 treinamento = pd.DataFrame(X_train)
 teste = pd.DataFrame(X_test)
 '''
@@ -43,7 +43,7 @@ print(treinamento)
 print(teste)
 
 
-r_fold_cross_validation(df, 2)
+
 
 
 fim = time.time()
