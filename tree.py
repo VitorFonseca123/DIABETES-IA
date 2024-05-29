@@ -6,6 +6,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 inicio = time.time()
 
+def renomear(df):
+    new_column_names = {
+        0: 'HighBP', 1: 'HighChol', 2: 'CholCheck', 3: 'BMI', 4: 'Smoker',
+        5: 'Stroke', 6: 'HeartDiseaseorAttack', 7: 'PhysActivity', 8: 'Fruits',
+        9: 'Veggies', 10: 'HvyAlcoholConsump', 11: 'AnyHealthcare', 12: 'NoDocbcCost',
+        13: 'GenHlth', 14: 'MentHlth', 15: 'PhysHlth', 16: 'DiffWalk', 17: 'Sex',
+        18: 'Age', 19: 'Education', 20: 'Income'
+    }
+    # renomeia o dataframe
+    df.rename(columns=new_column_names, inplace=True)
+    return df
+
 def holdout(df):
     X = df.iloc[:, 1:].values
     y = df.iloc[:, 0].values
@@ -37,17 +49,9 @@ X_train, X_test, y_train, y_test = r_fold_cross_validation(df,3)
 treinamento = pd.DataFrame(X_train)
 teste = pd.DataFrame(X_test)
 
-#matriz para renomear as colunas do dataframe
-new_column_names = {
-    0: 'HighBP', 1: 'HighChol', 2: 'CholCheck', 3: 'BMI', 4: 'Smoker',
-    5: 'Stroke', 6: 'HeartDiseaseorAttack', 7: 'PhysActivity', 8: 'Fruits',
-    9: 'Veggies', 10: 'HvyAlcoholConsump', 11: 'AnyHealthcare', 12: 'NoDocbcCost',
-    13: 'GenHlth', 14: 'MentHlth', 15: 'PhysHlth', 16: 'DiffWalk', 17: 'Sex',
-    18: 'Age', 19: 'Education', 20: 'Income'
-}
-#renomeia o dataframe
-teste.rename(columns=new_column_names, inplace=True)
-treinamento.rename(columns=new_column_names, inplace=True)
+teste = renomear(teste)
+treinamento = renomear(treinamento)
+
 
 '''
 print(f"Número de linhas de treinamento: {len(treinamento)}")
