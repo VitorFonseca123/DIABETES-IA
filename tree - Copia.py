@@ -8,7 +8,7 @@ from sklearn.tree import export_graphviz
 import graphviz
 import csv
 
-def holdout:
+
 
     
 data = []
@@ -19,7 +19,7 @@ with open('diabetes_indicator.csv', mode='r') as file:
 
 df = pd.DataFrame(data)
 print(df)
-'''X = df[['Diabetes_012']]  # Usando [[]] para criar um DataFrame com uma coluna
+X = df[['Diabetes_012']]  # Usando [[]] para criar um DataFrame com uma coluna
 y = df['HighBP']
 
 modelov1 = DecisionTreeClassifier(max_depth=None,
@@ -35,7 +35,7 @@ export_graphviz(modelov1, out_file=arquivo, feature_names=['Diabetes_012'])
 with open(arquivo) as f:
     dot_graph = f.read()
 grafico = graphviz.Source(dot_graph)
-grafico.view()'''
+grafico.view()
 
 fim = time.time()
 print(f"{fim - inicio} s")

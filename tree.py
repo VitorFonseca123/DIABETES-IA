@@ -1,9 +1,11 @@
 import time
 
-
+import graphviz
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
+
 inicio = time.time()
 
 def renomear(df):
@@ -51,7 +53,8 @@ teste = pd.DataFrame(X_test)
 
 teste = renomear(teste)
 treinamento = renomear(treinamento)
-
+# Obter os nomes das colunas (exceto a primeira, que é a etiqueta)
+feature_names = df.columns[1:]
 
 '''
 print(f"Número de linhas de treinamento: {len(treinamento)}")
@@ -60,6 +63,20 @@ print(f"Número de linhas de teste: {len(teste)}")'''
 print(treinamento)
 print(teste)
 
+arvore_decisao = DecisionTreeClassifier(max_depth=None,
+                                  max_features=None,
+                                  criterion="entropy",
+                                  min_samples_leaf=1,
+                                  min_samples_split=2)
+arvore_decisao.fit(X_train, y_train)
+arquivo = 'tree_modelov1.dot'
+
+
+export_graphviz(arvore_decisao, out_file=arquivo, feature_names=feature_names, class_names=True)
+with open(arquivo) as f:
+    dot_graph = f.read()
+grafico = graphviz.Source(dot_graph)
+grafico.render(view=True)
 
 
 
