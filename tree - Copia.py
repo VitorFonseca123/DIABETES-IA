@@ -31,11 +31,14 @@ modelov1.fit(X, y)
 
 arquivo = 'tree_modelov1.dot'
 
-export_graphviz(modelov1, out_file=arquivo, feature_names=['Diabetes_012'])
+arquivo = 'tree_modelov1.dot'
+
+
+export_graphviz(arvore_decisao, out_file=arquivo, feature_names=feature_names, class_names=True)
 with open(arquivo) as f:
     dot_graph = f.read()
 grafico = graphviz.Source(dot_graph)
-grafico.view()
+grafico.render(view=True)
 
 fim = time.time()
 print(f"{fim - inicio} s")

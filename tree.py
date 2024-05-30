@@ -20,12 +20,12 @@ def renomear(df):
     df.rename(columns=new_column_names, inplace=True)
     return df
 
-def holdout(df):
+def holdout(df, test_size):
     X = df.iloc[:, 1:].values
     y = df.iloc[:, 0].values
 
     # Dividindo os dados em treino e teste (80% treino, 20% teste)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
 
     return X_train, X_test, y_train, y_test
 
@@ -46,8 +46,8 @@ def r_fold_cross_validation(df, n_splits):
 #ler arquivo csv
 df = pd.read_csv('diabetes_indicator.csv')
 
-#X_train, X_test, y_train, y_test = holdout(df)
-X_train, X_test, y_train, y_test = r_fold_cross_validation(df,3)
+X_train, X_test, y_train, y_test = holdout(df, 0.2)
+#X_train, X_test, y_train, y_test = r_fold_cross_validation(df,3)
 treinamento = pd.DataFrame(X_train)
 teste = pd.DataFrame(X_test)
 
@@ -68,7 +68,7 @@ arvore_decisao = DecisionTreeClassifier(max_depth=None,
                                   criterion="entropy",
                                   min_samples_leaf=1,
                                   min_samples_split=2)
-arvore_decisao.fit(X_train, y_train)
+arvore_decisao.fit(treinamento, y_train)
 arquivo = 'tree_modelov1.dot'
 
 
