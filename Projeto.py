@@ -1,11 +1,14 @@
 import time
 
 import graphviz
+import numpy as np
 import pandas as pd
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
+
 
 inicio = time.time()
 
@@ -28,13 +31,26 @@ def holdout(df, test_size):
     # Dividindo os dados em treino e teste (80% treino, 20% teste)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
 
-    return X_train, X_test, y_train, y_test
 
-def r_fold_cross_validation(df, n_splits):
+    treinamento = pd.DataFrame(X_train)
+    teste = pd.DataFrame(X_test)
+
+    teste = renomear(teste)
+    treinamento = renomear(treinamento)
+    # Obter os nomes das colunas (exceto a primeira, que é a etiqueta)
+    feature_names = df.columns[1:]
+    print("Accuracy")
+    print("Arvore: ", arvore_decisao(treinamento, y_train, feature_names, teste, y_test))
+    print("KNN: ",KNN(treinamento, y_train, 10, teste, y_test))
+
+
+def r_fold_cross_validation(df, r_folds):
     X = df.iloc[:, 1:].values
     y = df.iloc[:, 0].values
 
-    kfold = KFold(n_splits, shuffle=True, random_state=42)
+    kfold = KFold(r_folds, shuffle=True, random_state=1)
+    accuracies_tree = []
+    accuracies_KNN = []
     for i, (train_index, test_index) in enumerate(kfold.split(X)):
         '''print(f"Fold {i}:")
         print(f"  Train: index={train_index}")
@@ -42,8 +58,21 @@ def r_fold_cross_validation(df, n_splits):
 
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
-        return X_train, X_test, y_train, y_test
-def arvore_deicisao(treinamento, y_train, f_names,x_teste, y_teste):
+        treinamento = pd.DataFrame(X_train)
+        teste = pd.DataFrame(X_test)
+
+        teste = renomear(teste)
+        treinamento = renomear(treinamento)
+        # Obter os nomes das colunas (exceto a primeira, que é a etiqueta)
+        feature_names = df.columns[1:]
+        accuracies_tree.append(arvore_decisao(treinamento, y_train, feature_names, teste, y_test))
+        accuracies_KNN.append(KNN(treinamento, y_train, 10, teste, y_test))
+    print("Accuracy")
+    print("Arvore: ", np.mean(accuracies_tree))
+    print("KNN: ", np.mean(accuracies_KNN))
+
+
+def arvore_decisao(treinamento, y_train, f_names,x_teste, y_teste):
     arvore_decisao = DecisionTreeClassifier(max_depth=10,
                                             max_features=None,
                                             criterion="entropy",
@@ -60,8 +89,10 @@ def arvore_deicisao(treinamento, y_train, f_names,x_teste, y_teste):
 
     #print(arvore_decisao.get_depth())
     #print(arvore_decisao.get_n_leaves())
-    print(arvore_decisao.score(x_teste, y_teste, None))
-
+    y_pred = arvore_decisao.predict(x_teste)
+    #print(accuracy_score(y_teste,y_pred))
+    #print(arvore_decisao.score(x_teste, y_teste, None))
+    return accuracy_score(y_teste,y_pred)
 
 def KNN(treinamento,y_train,K, x_teste, y_teste):
     k_vizinhos = KNeighborsClassifier(n_neighbors=K,
@@ -71,23 +102,15 @@ def KNN(treinamento,y_train,K, x_teste, y_teste):
                                       metric_params=None,
                                       n_jobs=None)
     k_vizinhos.fit(treinamento, y_train)
-    print(k_vizinhos.score(x_teste, y_teste, None))
 
-
+    y_pred = k_vizinhos.predict(x_teste)
+    return accuracy_score(y_teste, y_pred)
 
 def main():
     # ler arquivo csv
     df = pd.read_csv('diabetes_indicator.csv')
 
-    X_train, X_test, y_train, y_test = holdout(df, 0.2)
-    #X_train, X_test, y_train, y_test = r_fold_cross_validation(df,10)
-    treinamento = pd.DataFrame(X_train)
-    teste = pd.DataFrame(X_test)
 
-    teste = renomear(teste)
-    treinamento = renomear(treinamento)
-    # Obter os nomes das colunas (exceto a primeira, que é a etiqueta)
-    feature_names = df.columns[1:]
 
     '''
     print(f"Número de linhas de treinamento: {len(treinamento)}")
@@ -95,8 +118,9 @@ def main():
     #print(df)
     #print(treinamento)
     #print(teste)
-    #arvore_deicisao(treinamento,y_train, feature_names, teste, y_test)
-    KNN(treinamento,y_train,10,teste, y_test)
+
+    #holdout(df,0.2)
+    r_fold_cross_validation(df,2)
     fim = time.time()
     print(f"{fim - inicio:.2f} s")
 
