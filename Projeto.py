@@ -3,6 +3,7 @@ import time
 import graphviz
 import numpy as np
 import pandas as pd
+from sklearn import metrics
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
@@ -10,7 +11,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 
 
-inicio = time.time()
+
 
 def renomear(df):
     new_column_names = {
@@ -39,16 +40,28 @@ def holdout(df, test_size):
     treinamento = renomear(treinamento)
     # Obter os nomes das colunas (exceto a primeira, que é a etiqueta)
     feature_names = df.columns[1:]
+    count0 = 0
+    count2 =0
+    for valor in y_train:
+        if valor == 0.0:
+            count0 += 1
+        if valor == 2.0:
+            count2 +=1
+
+    print(count0)
+    print(count2)
+
     print("Accuracy")
     print("Arvore: ", arvore_decisao(treinamento, y_train, feature_names, teste, y_test))
-    print("KNN: ",KNN(treinamento, y_train, 10, teste, y_test))
+    print("")
+    print("KNN: ",KNN(treinamento, y_train, 2, teste, y_test))
 
 
 def r_fold_cross_validation(df, r_folds):
     X = df.iloc[:, 1:].values
     y = df.iloc[:, 0].values
 
-    kfold = KFold(r_folds, shuffle=True, random_state=1)
+    kfold = KFold(r_folds, shuffle=True, random_state=None)
     accuracies_tree = []
     accuracies_KNN = []
     for i, (train_index, test_index) in enumerate(kfold.split(X)):
@@ -66,15 +79,15 @@ def r_fold_cross_validation(df, r_folds):
         # Obter os nomes das colunas (exceto a primeira, que é a etiqueta)
         feature_names = df.columns[1:]
         accuracies_tree.append(arvore_decisao(treinamento, y_train, feature_names, teste, y_test))
-        accuracies_KNN.append(KNN(treinamento, y_train, 10, teste, y_test))
+        accuracies_KNN.append(KNN(treinamento, y_train, 15, teste, y_test))
     print("Accuracy")
     print("Arvore: ", np.mean(accuracies_tree))
-    print("KNN: ", np.mean(accuracies_KNN))
+    #print("KNN: ", np.mean(accuracies_KNN))
 
 
 def arvore_decisao(treinamento, y_train, f_names,x_teste, y_teste):
-    arvore_decisao = DecisionTreeClassifier(max_depth=10,
-                                            max_features=None,
+    arvore_decisao = DecisionTreeClassifier(max_depth=20,
+                                            max_features=15,
                                             criterion="entropy",
                                             min_samples_leaf=1,
                                             min_samples_split=2)
@@ -90,8 +103,14 @@ def arvore_decisao(treinamento, y_train, f_names,x_teste, y_teste):
     #print(arvore_decisao.get_depth())
     #print(arvore_decisao.get_n_leaves())
     y_pred = arvore_decisao.predict(x_teste)
+
+
     #print(accuracy_score(y_teste,y_pred))
     #print(arvore_decisao.score(x_teste, y_teste, None))
+
+
+
+    print(metrics.confusion_matrix(y_teste, y_pred))
     return accuracy_score(y_teste,y_pred)
 
 def KNN(treinamento,y_train,K, x_teste, y_teste):
@@ -104,13 +123,24 @@ def KNN(treinamento,y_train,K, x_teste, y_teste):
     k_vizinhos.fit(treinamento, y_train)
 
     y_pred = k_vizinhos.predict(x_teste)
+    print(metrics.confusion_matrix(y_teste, y_pred))
     return accuracy_score(y_teste, y_pred)
 
 def main():
+    inicio = time.time()
     # ler arquivo csv
     df = pd.read_csv('diabetes_indicator.csv')
+    #primeira_feature = df[df.iloc[:, 0] == 0]
 
+    # Selecionar metade desses registros de forma aleatória
+    #metade_para_remover = primeira_feature.sample(frac=0, random_state=1)
 
+    # Remover esses registros do DataFrame original
+    #df = df.drop(metade_para_remover.index)
+
+    #primeira_feature = df[df.iloc[:, 0] == 1]
+    #metade_para_remover = primeira_feature.sample(frac=0, random_state=1)
+    #df = df.drop(metade_para_remover.index)
 
     '''
     print(f"Número de linhas de treinamento: {len(treinamento)}")
@@ -119,8 +149,8 @@ def main():
     #print(treinamento)
     #print(teste)
 
-    #holdout(df,0.2)
-    r_fold_cross_validation(df,2)
+    holdout(df,0.2)
+    #r_fold_cross_validation(df,2)
     fim = time.time()
     print(f"{fim - inicio:.2f} s")
 
