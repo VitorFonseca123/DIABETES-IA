@@ -86,8 +86,8 @@ def r_fold_cross_validation(df, r_folds):
 
 
 def arvore_decisao(treinamento, y_train, f_names,x_teste, y_teste):
-    arvore_decisao = DecisionTreeClassifier(max_depth=20,
-                                            max_features=15,
+    arvore_decisao = DecisionTreeClassifier(max_depth=None,
+                                            max_features=None,
                                             criterion="entropy",
                                             min_samples_leaf=1,
                                             min_samples_split=2)
