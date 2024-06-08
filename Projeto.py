@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn import metrics
+from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.model_selection import KFold
@@ -25,9 +26,9 @@ def renomear(df):
     df.rename(columns=new_column_names, inplace=True)
     return df
 
-def holdout(df, test_size, arvore, vizinhos, f_names):
-    X = df.iloc[:, 1:].values
-    y = df.iloc[:, 0].values
+
+def holdout(df, test_size, f_names, X, y, modelo, modelo_nome):
+
 
     # Dividindo os dados em treino e teste (80% treino, 20% teste)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size,shuffle=True)
@@ -55,40 +56,49 @@ def holdout(df, test_size, arvore, vizinhos, f_names):
 
     treinamento = renomear(treinamento)
 
-    smoteteste = SMOTE(sampling_strategy='not majority', random_state=44787)
-    X_test_resampled, y_test_resampled = smoteteste.fit_resample(X_test, y_test)
-    teste = pd.DataFrame(X_test_resampled)
+    teste = pd.DataFrame(X_test)
     teste = renomear(teste)
     print("Holdout")
-    print("Arvore")
-    arvore.fit(treinamento, y_train_resampled)
-    arquivo = 'tree_modelov1.dot'
+    modelo.fit(treinamento, y_train_resampled)
+    if modelo_nome.upper() == 'ARVORE':
+        arquivo = 'tree_modelov1.dot'
 
-    export_graphviz(arvore, out_file=arquivo, feature_names=f_names, class_names=True)
-    with open(arquivo) as f:
-        dot_graph = f.read()
-    grafico = graphviz.Source(dot_graph)
-    grafico.render(view=True)
+        export_graphviz(modelo, out_file=arquivo, feature_names=f_names, class_names=True)
+        with open(arquivo) as f:
+            dot_graph = f.read()
+        grafico = graphviz.Source(dot_graph)
+        grafico.render(view=True)
+        y_pred = modelo.predict(teste)
+        print(metrics.confusion_matrix(y_test, y_pred))
+        print("Acuracia:", metrics.accuracy_score(y_test, y_pred))
+        print("Precisao: ", metrics.precision_score(y_test, y_pred, average=None))
+    elif modelo_nome.upper() == 'KNN':
+        pca = PCA(n_components=2)
+        principalComponents_train = pca.fit_transform(X_train_resampled)
+        principalComponents_test = pca.transform(X_test)
 
-    y_pred = arvore.predict(teste)
-    print(metrics.confusion_matrix(y_test_resampled, y_pred))
-    print("Acuracia:", metrics.accuracy_score(y_test_resampled, y_pred))
-    print("Precisao: ", metrics.precision_score(y_test_resampled, y_pred, average=None))
-    print("KNN: ")
-    vizinhos.fit(treinamento, y_train_resampled)
-    y_pred = vizinhos.predict(teste)
-    print(metrics.confusion_matrix(y_test_resampled, y_pred))
-    print("Acuracia: ", metrics.accuracy_score(y_test_resampled, y_pred))
-    print("Precisao: ", metrics.precision_score(y_test_resampled,y_pred, average=None))
+        treinamento = pd.DataFrame(principalComponents_train,
+                                   columns=['componente principal 1', 'componente principal 2'])
+        teste = pd.DataFrame(principalComponents_test, columns=['componente principal 1', 'componente principal 2'])
 
+        print("KNN: ")
+        modelo.fit(treinamento, y_train_resampled)
+        y_pred = modelo.predict(teste)
 
-    plt.figure(figsize=(10, 6))
-    plt.scatter(X_test_resampled[:, 0], X_test_resampled[:, 1], c=y_pred, cmap='viridis')
-    plt.title('KNN - Classificação das Amostras')
-    plt.xlabel('Feature 1')
-    plt.ylabel('Feature 2')
-    plt.colorbar(label='Classe Prevista')
-    plt.show()
+        print(metrics.confusion_matrix(y_test, y_pred))
+        print("Acuracia: ", metrics.accuracy_score(y_test, y_pred))
+        print("Precisao: ", metrics.precision_score(y_test, y_pred, average=None))
+
+        y_score = modelo.predict_proba(teste)[:, 1]
+        fig = px.scatter(
+            principalComponents_test, x=0, y=1,
+            color=y_score, color_continuous_scale='RdBu',
+            symbol=y_test, symbol_map={'0': 'square-dot', '1': 'circle-dot'},
+            labels={'symbol': 'label', 'color': 'score of <br>first class'}
+        )
+        fig.update_traces(marker_size=12, marker_line_width=1.5)
+        fig.update_layout(legend_orientation='h')
+        fig.show()
 
 
 def r_fold_cross_validation(df, r_folds,modelo, modeloNome):
@@ -165,12 +175,15 @@ def main():
     #print(treinamento)
     #print(teste)
     feature_names = df.columns[1:]
+    X = df.iloc[:, 1:].values
+    y = df.iloc[:, 0].values
     AD = arvore_decisao(10,1,2)
     vizinhos = KNN(100)
     df.sample()
-    holdout(df,0.2, AD, vizinhos, feature_names)
-    #r_fold_cross_validation(df,3, AD, 'Arvore: ')
-    #r_fold_cross_validation(df, 3, vizinhos, 'KNN: ')
+    holdout(df, 0.2, feature_names, X, y, AD, 'Arvore')
+    holdout(df,0.2, feature_names,X, y, vizinhos, 'KNN')
+    #r_fold_cross_validation(df,3, AD, 'Arvore')
+    #r_fold_cross_validation(df, 3, vizinhos, 'KNN')
     fim = time.time()
     print(f"{fim - inicio:.2f} s")
 
