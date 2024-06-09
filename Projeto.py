@@ -51,9 +51,12 @@ def holdout(df, test_size, f_names, X, y, modelo, modelo_nome):
     # Dividindo os dados em treino e teste (80% treino, 20% teste)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, shuffle=True)
 
+
+
+    #smote = SMOTE(sampling_strategy='minority',random_state=42523)
+    #treinamento, y_train = smote.fit_resample(X_train, y_train)
     treinamento = pd.DataFrame(X_train)
     treinamento = renomear(treinamento)
-
     teste = pd.DataFrame(X_test)
     teste = renomear(teste)
     print("Holdout")
@@ -145,7 +148,7 @@ def KNN(K):
 def main():
     inicio = time.time()
     # ler arquivo csv
-    df = pd.read_csv('diabetes_indicator.csv')
+    df = pd.read_csv('diabetes_binary.csv')
 
     primeira_feature = df[df.iloc[:, 0] == 1]
     metade_para_remover = primeira_feature.sample(frac=0, random_state=1)
