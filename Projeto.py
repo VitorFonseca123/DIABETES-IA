@@ -52,9 +52,8 @@ def holdout(df, test_size, f_names, X, y, modelo, modelo_nome):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, shuffle=True)
 
 
-
-    #smote = SMOTE(sampling_strategy='minority',random_state=42523)
-    #treinamento, y_train = smote.fit_resample(X_train, y_train)
+    smote = SMOTE(sampling_strategy='minority',random_state=42523)
+    X_train, y_train = smote.fit_resample(X_train, y_train)
     treinamento = pd.DataFrame(X_train)
     treinamento = renomear(treinamento)
     teste = pd.DataFrame(X_test)
@@ -81,11 +80,11 @@ def holdout(df, test_size, f_names, X, y, modelo, modelo_nome):
         print("KNN: ")
         modelo.fit(treinamento, y_train)
         y_pred = modelo.predict(teste)
-        y_pred_proba = modelo.predict_proba(teste)
+
         print(metrics.confusion_matrix(y_test, y_pred))
         print("Acuracia: ", metrics.accuracy_score(y_test, y_pred))
         print("Precisao: ", metrics.precision_score(y_test, y_pred, average=None))
-        plot_roc_curve(y_test, y_pred_proba, 'KNN')
+        #plot_roc_curve(y_test, y_pred_proba, 'KNN')
 
         pca = PCA(n_components=2)
         teste = pca.fit_transform(teste)
@@ -97,17 +96,17 @@ def holdout(df, test_size, f_names, X, y, modelo, modelo_nome):
         fig.show()
 
 
-def r_fold_cross_validation(df, r_folds, modelo, modeloNome):
-    X = df.iloc[:, 1:].values
-    y = df.iloc[:, 0].values
+def r_fold_cross_validation(df, r_folds,X, y, modelo, modelo_nome):
     acc = []
     prec = []
+    print('Rfold')
+
     kf = StratifiedKFold(n_splits=r_folds, shuffle=True, random_state=42)
     for i, (train_index, test_index) in enumerate(kf.split(X, y)):
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
-        smote = SMOTE(sampling_strategy='minority', random_state=42)
-        X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
+        #smote = SMOTE(sampling_strategy='minority', random_state=42)
+        #X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
 
         treinamento = pd.DataFrame(X_train_resampled)
         teste = pd.DataFrame(X_test)
@@ -116,6 +115,10 @@ def r_fold_cross_validation(df, r_folds, modelo, modeloNome):
         treinamento = renomear(treinamento)
 
         modelo.fit(treinamento, y_train_resampled)
+        if modelo_nome.upper() == 'ARVORE':
+            print('Arvore')
+        elif modelo_nome.upper() == 'KNN':
+            print('KNN')
         y_pred = modelo.predict(teste)
         print(metrics.confusion_matrix(y_test, y_pred))
         acc.append(metrics.accuracy_score(y_test, y_pred))
@@ -160,10 +163,10 @@ def main():
     AD = arvore_decisao(10, 1, 2)
     vizinhos = KNN(30)
     df.sample()
-    holdout(df, 0.4, feature_names, X, y, AD, 'Arvore')
-    holdout(df, 0.4, feature_names, X, y, vizinhos, 'KNN')
-    # r_fold_cross_validation(df, 3, AD, 'Arvore')
-    # r_fold_cross_validation(df, 3, vizinhos, 'KNN')
+    #holdout(df, 0.3, feature_names, X, y, AD, 'Arvore')
+    holdout(df, 0.3, feature_names, X, y, vizinhos, 'KNN')
+    #r_fold_cross_validation(df, 3,X,y, AD, 'Arvore')
+    #r_fold_cross_validation(df, 3,X, y, vizinhos, 'KNN')
     fim = time.time()
     print(f"{fim - inicio:.2f} s")
 
